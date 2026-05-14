@@ -89,14 +89,41 @@ export default function App() {
     gui.add(state, 'threshold', 0.1, 3.0, 0.01).name('Threshold').onChange(rebuild);
 
     const srcFolder = gui.addFolder('Sources');
-    state.sources.forEach((src, i) => {
-      const f = srcFolder.addFolder(`Source ${i + 1}`);
-      f.add(src, 'strength', 1, 20, 0.1).onChange(rebuild);
-      f.add(src, 'x', -4, 4, 0.1).onChange(rebuild);
-      f.add(src, 'y', -4, 4, 0.1).onChange(rebuild);
-      f.add(src, 'z', -4, 4, 0.1).onChange(rebuild);
-      f.close();
-    });
+    const addBtn = { 'Add Source': addSource };
+    srcFolder.add(addBtn, 'Add Source');
+
+    let sourceFolders = [];
+
+    function rebuildSourceFolders() {
+      sourceFolders.forEach(f => f.destroy());
+      sourceFolders = [];
+      state.sources.forEach((src, i) => {
+        const f = srcFolder.addFolder(`Source ${i + 1}`);
+        f.add(src, 'x', -4, 4, 0.1).onChange(rebuild);
+        f.add(src, 'y', -4, 4, 0.1).onChange(rebuild);
+        f.add(src, 'z', -4, 4, 0.1).onChange(rebuild);
+        f.add(src, 'strength', 1, 20, 0.1).onChange(rebuild);
+        const actions = { Remove: () => removeSource(i) };
+        f.add(actions, 'Remove');
+        f.close();
+        sourceFolders.push(f);
+      });
+    }
+
+    function addSource() {
+      state.sources.push({ x: 0, y: 0, z: 0, strength: 5 });
+      rebuildSourceFolders();
+      rebuild();
+    }
+
+    function removeSource(i) {
+      if (state.sources.length <= 1) return;
+      state.sources.splice(i, 1);
+      rebuildSourceFolders();
+      rebuild();
+    }
+
+    rebuildSourceFolders();
 
     // Render loop
     let animId;
